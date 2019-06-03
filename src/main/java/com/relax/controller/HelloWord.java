@@ -6,6 +6,8 @@ public class HelloWord {
 
         System.out.println("HelloWord");
 
+        System.out.println("你好");
+
     }
 
 }
