@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+      http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+      http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+      http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+
+    <!--===========扫描包并将这个包下面所有的类托管到spring容器============-->
+    <context:component-scan base-package="com.relax"></context:component-scan>
+
+    <!-- 1、配置加载数据源参数文件； -->
+    <context:property-placeholder location="classpath:mysql.properties" />
+
+    <!-- 2、配置数据源连接池 -->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="${jdbc.driver}"></property>
+        <property name="url" value="${jdbc.url}"></property>
+        <property name="username" value="${jdbc.username}"></property>
+        <property name="password" value="${jdbc.password}"></property>
+    </bean>
+
+    <!-- 3、配置sessionFactoryBean -->
+    <!--<bean id="sessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">-->
+        <!--<property name="dataSource" ref="dataSource"></property>-->
+        <!--<property name="mapperLocations" value="classpath:mapper/*.xml"></property>-->
+        <!--<property name="typeAliasesPackage" value="com.james.pojo"></property>-->
+    <!--</bean>-->
+
+    <!-- 4、配置mybatis接口扫描器 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.relax.mapper"></property>
+        <property name="sqlSessionFactoryBeanName" value="sessionFactory"></property>
+    </bean>
+
+    <!-- 5、配置事务管理器 事务管理器实现(org.springframework.*) jdbc.datasource.DataSourceTransactionManager-->
+    <!--使用时机  使用jdbc的抽象以及ibatis支持  配置示例如下:-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+
+    <!-- 6、注解配置事务扩散机制 @Transactional(propagation = Propagation.REQUIRED)-->
+    <tx:annotation-driven transaction-manager="transactionManager" />
+
+    <!-- 6、xml配置事务扩散(传播)机制 -->
+    <!--编程式事务  当系统需要明确的，细粒度的控制各个事务的边界，应选择编程式事务。-->
+    <!--声明式事务  当系统对于事务的控制粒度较粗时，应该选择申明式事务，通过<tx>标签和<aop>切面形式在xml中进行配置-->
+    <!--无论你选择上述何种事务方式去实现事务控制，spring都提供基于门面设计模式的事务管理器供选择-->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes >
+            <tx:method name="delete*" propagation="REQUIRED" />
+            <tx:method name="insert*" propagation="REQUIRED" />
+            <tx:method name="update*" propagation="REQUIRED" />
+            <tx:method name="*" propagation="SUPPORTS" read-only="true"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <!--<aop:config>-->
+        <!--<aop:pointcut expression="execution(* com.relax.service.*.*.*(..))" id="serviceCutPoint"/>-->
+        <!--<aop:advisor advice-ref="txAdvice" pointcut-ref="serviceCutPoint"/>-->
+    <!--</aop:config>-->
+
+</beans>
